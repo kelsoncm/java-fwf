@@ -238,14 +238,34 @@ public final class ZipUtils {
         try {
             zipFile = new ZipFile(nomZip);
             final Enumeration<? extends ZipEntry> enumeration = zipFile.entries();
+            final File diretorioBase = new File(dirTemp).getCanonicalFile();
+            final String diretorioBasePath = diretorioBase.getPath();
 
             try {
                 while (enumeration.hasMoreElements()) {
                     final ZipEntry zipEntry = enumeration.nextElement();
-                    final String nomeCompletoZip = dirTemp + System.getProperty("file.separator") + zipEntry.getName();
-                    final OutputStream outStream = new FileOutputStream(nomeCompletoZip);
+                    final File arquivoDestino = new File(diretorioBase, zipEntry.getName()).getCanonicalFile();
+                    final String arquivoDestinoPath = arquivoDestino.getPath();
+                    if (!(arquivoDestinoPath.equals(diretorioBasePath)
+                            || arquivoDestinoPath.startsWith(diretorioBasePath + File.separator))) {
+                        throw new IOException("Entrada de ZIP inválida: " + zipEntry.getName());
+                    }
+
+                    if (zipEntry.isDirectory()) {
+                        if (!arquivoDestino.exists() && !arquivoDestino.mkdirs()) {
+                            throw new IOException("Não foi possível criar diretório: " + arquivoDestinoPath);
+                        }
+                        continue;
+                    }
+
+                    final File parent = arquivoDestino.getParentFile();
+                    if (parent != null && !parent.exists() && !parent.mkdirs()) {
+                        throw new IOException("Não foi possível criar diretório: " + parent.getPath());
+                    }
+
+                    final OutputStream outStream = new FileOutputStream(arquivoDestino);
                     final InputStream inStream = zipFile.getInputStream(zipEntry);
-                    resultado.add(nomeCompletoZip);
+                    resultado.add(arquivoDestinoPath);
                     try {
                         while ((length = inStream.read(buffer)) != -1) {
                             outStream.write(buffer, 0, length);
