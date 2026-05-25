@@ -22,7 +22,7 @@ import java.util.zip.ZipOutputStream;
 
 /**
  *
- * Utilit·rio para trabalhar com compactaÁ„o e descompactaÁ„o de arquivos
+ * Utilit√°rio para trabalhar com compacta√ß√£o e descompacta√ß√£o de arquivos
  *
  * @author edle.silva
  *
@@ -52,7 +52,7 @@ public final class ZipUtils {
     }
 
     /**
-     * TODO - REFATORAR Seria interessante ir para um utilit·rio com ArquivoUtils Deleta todos os arquivos de um diretÛrios
+     * TODO - REFATORAR Seria interessante ir para um utilit√°rio com ArquivoUtils Deleta todos os arquivos de um diret√≥rios
      *
      * @throws IOException
      */
@@ -64,15 +64,15 @@ public final class ZipUtils {
                     fileInterno.delete();
                 }
             } else {
-                throw new IOException("N„o È um diretÛrio: [" + file.getAbsolutePath() + "]");
+                throw new IOException("N√£o √© um diret√≥rio: [" + file.getAbsolutePath() + "]");
             }
         } else {
-            throw new IOException("DiretÛrio n„o existe: [" + file.getAbsolutePath() + "]");
+            throw new IOException("Diret√≥rio n√£o existe: [" + file.getAbsolutePath() + "]");
         }
     }
 
     /**
-     * Deleta um diretÛrio e todos os seus arquivos
+     * Deleta um diret√≥rio e todos os seus arquivos
      *
      * @param diretorio
      *
@@ -87,7 +87,7 @@ public final class ZipUtils {
             }
             file.delete();
         } else {
-            throw new IOException("N„o È um diretÛrio: [" + file.getAbsolutePath() + "]");
+            throw new IOException("N√£o √© um diret√≥rio: [" + file.getAbsolutePath() + "]");
         }
     }
 
@@ -158,16 +158,26 @@ public final class ZipUtils {
             zipEntry = zin.getNextEntry();
             if (zipEntry != null) {
                 nomeArquivo = zipEntry.getName();
-                final String nomeCompletoArquivo = diretorioDestino + System.getProperty("file.separator")
-                        + nomeArquivo;
+                final File diretorioSaida = new File(diretorioDestino).getCanonicalFile();
+                final File arquivoSaida = new File(diretorioSaida, nomeArquivo).getCanonicalFile();
 
-                fout = new FileOutputStream(nomeCompletoArquivo);
+                if (!arquivoSaida.toPath().startsWith(diretorioSaida.toPath())) {
+                    throw new IOException("Entrada ZIP inv√°lida: " + nomeArquivo);
+                }
+
+                final File parent = arquivoSaida.getParentFile();
+                if (parent != null && !parent.exists()) {
+                    parent.mkdirs();
+                }
+
+                fout = new FileOutputStream(arquivoSaida);
 
                 for (int c = zin.read(); c != -1; c = zin.read()) {
                     fout.write(c);
                 }
                 zin.closeEntry();
                 fout.close();
+                nomeArquivo = arquivoSaida.getName();
             }
             zin.close();
             return nomeArquivo;
@@ -214,7 +224,7 @@ public final class ZipUtils {
 
     /**
      *
-     * Descompacta um arquivo ZIP para um diretÛrio informado
+     * Descompacta um arquivo ZIP para um diret√≥rio informado
      *
      * @param InputStream
      * @return ByteArrayOutputStream com o primeiro arquivo descompactado
@@ -317,7 +327,7 @@ public final class ZipUtils {
             } finally {
                 zipOutStream.close();
                 fileOut.close();
-                // apaga o arquivo se n„o foi poss?vel gerar o .zip
+                // apaga o arquivo se n√£o foi poss?vel gerar o .zip
                 if (!resultado) {
                     new File(nomeZip).delete();
                 }
@@ -357,9 +367,9 @@ public final class ZipUtils {
             zipOutStream.setComment(adler.getValue() + "-" + descricao);
             return resultado;
         } catch (final FileNotFoundException e) {
-            throw new IOException("Arquivo n„o encontrado.", e);
+            throw new IOException("Arquivo n√£o encontrado.", e);
         } catch (final UnsupportedEncodingException e) {
-            throw new IOException("Encoding n„o suportado.", e);
+            throw new IOException("Encoding n√£o suportado.", e);
         } catch (final IOException e) {
             throw new IOException(e);
         }
@@ -385,7 +395,7 @@ public final class ZipUtils {
      * @param arquivos
      * @param nomeZip
      * @param descricao
-     * @param semCompactar True se n„o È para utilizar a compactaÁ„o.
+     * @param semCompactar True se n√£o √© para utilizar a compacta√ß√£o.
      * @return
      * @throws IOException
      */
@@ -416,7 +426,7 @@ public final class ZipUtils {
             } finally {
                 zipOutStream.close();
                 fileOut.close();
-                // apaga o arquivo se n„o foi possivel gerar o .zip
+                // apaga o arquivo se n√£o foi possivel gerar o .zip
                 if (!resultado) {
                     new File(nomeZip).delete();
                 }
