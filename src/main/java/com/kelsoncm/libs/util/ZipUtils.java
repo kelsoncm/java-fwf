@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -239,17 +240,17 @@ public final class ZipUtils {
             zipFile = new ZipFile(nomZip);
             final Enumeration<? extends ZipEntry> enumeration = zipFile.entries();
             final File diretorioBase = new File(dirTemp).getCanonicalFile();
-            final String diretorioBasePath = diretorioBase.getPath();
+            final Path diretorioBaseNormalizado = diretorioBase.toPath().toAbsolutePath().normalize();
 
             try {
                 while (enumeration.hasMoreElements()) {
                     final ZipEntry zipEntry = enumeration.nextElement();
-                    final File arquivoDestino = new File(diretorioBase, zipEntry.getName()).getCanonicalFile();
-                    final String arquivoDestinoPath = arquivoDestino.getPath();
-                    if (!(arquivoDestinoPath.equals(diretorioBasePath)
-                            || arquivoDestinoPath.startsWith(diretorioBasePath + File.separator))) {
+                    final Path arquivoDestinoNormalizado = diretorioBaseNormalizado.resolve(zipEntry.getName()).normalize();
+                    if (!arquivoDestinoNormalizado.startsWith(diretorioBaseNormalizado)) {
                         throw new IOException("Entrada de ZIP inválida: " + zipEntry.getName());
                     }
+                    final File arquivoDestino = arquivoDestinoNormalizado.toFile();
+                    final String arquivoDestinoPath = arquivoDestino.getPath();
 
                     if (zipEntry.isDirectory()) {
                         if (!arquivoDestino.exists() && !arquivoDestino.mkdirs()) {
