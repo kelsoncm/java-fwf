@@ -200,15 +200,24 @@ public final class ZipUtils {
         final ZipInputStream zin = new ZipInputStream(inputStream);
         ZipEntry zipEntry = null;
         String nomeArquivo = STRING_EMPTY;
+        final File diretorioSaida = new File(diretorioDestino).getCanonicalFile();
 
         FileOutputStream fout = null;
         try {
             while ((zipEntry = zin.getNextEntry()) != null) {
                 nomeArquivo = zipEntry.getName();
-                final String nomeCompletoArquivo = diretorioDestino + System.getProperty("file.separator")
-                        + nomeArquivo;
+                final File arquivoSaida = new File(diretorioSaida, nomeArquivo).getCanonicalFile();
 
-                fout = new FileOutputStream(nomeCompletoArquivo);
+                if (!arquivoSaida.toPath().startsWith(diretorioSaida.toPath())) {
+                    throw new IOException("Entrada ZIP inválida: " + nomeArquivo);
+                }
+
+                final File parent = arquivoSaida.getParentFile();
+                if (parent != null && !parent.exists()) {
+                    parent.mkdirs();
+                }
+
+                fout = new FileOutputStream(arquivoSaida);
 
                 for (int c = zin.read(); c != -1; c = zin.read()) {
                     fout.write(c);
